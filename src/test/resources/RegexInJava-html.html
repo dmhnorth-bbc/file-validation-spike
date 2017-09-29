@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<HTML><HEAD>
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=UTF-8">
+<TITLE>Using Regular Expressions in Java</TITLE>
+<meta name="viewport" content="width=device-width">
+<link rel="alternate" media="only screen and (max-device-width: 979px)" href="https://regular-expressions.mobi/java.html">
+<script type="text/javascript">if (screen.width < 980) window.location.replace("//regular-expressions.mobi/java.html?wlr=1");</script><script src="regex.js" type="text/javascript"></script>
+<link rel="alternate" type="application/rss+xml" title="Regex Guru" href="http://www.regexguru.com/feed/">
+<META NAME="Author" CONTENT="Jan Goyvaerts">
+<META NAME="Description" CONTENT="Learn how to use the regular expression classes that are part of the JDK 1.4 and later.">
+<META NAME="Keywords" CONTENT="">
+<LINK REL=StyleSheet HREF="regex.css" TYPE="text/css">
+</HEAD>
+<BODY BGCOLOR=white TEXT=black>
+<script type="text/javascript">window.onresize = movecontent;</script>
+<DIV id=top></DIV>
+<div id=btntop><table align=center cellspacing=0 cellpadding=0 border=0><tr><td><a href="quickstart.html" target="_top"><div onmouseover="this.style.backgroundColor='#FFA000';" onmouseout="this.style.backgroundColor='#A03300';return false;">Quick&nbsp;Start</div></a></td><td><a href="tutorial.html" target="_top"><div onmouseover="this.style.backgroundColor='#FFA000';" onmouseout="this.style.backgroundColor='#A03300';return false;">Tutorial</div></a></td><td><a href="tools.html" target="_top"><div onmouseover="this.style.backgroundColor='#FFA000';" onmouseout="this.style.backgroundColor='#A03300';return false;">Tools&nbsp;&amp;&nbsp;Languages</div></a></td><td><a href="examples.html" target="_top"><div onmouseover="this.style.backgroundColor='#FFA000';" onmouseout="this.style.backgroundColor='#A03300';return false;">Examples</div></a></td><td><a href="reference.html" target="_top"><div onmouseover="this.style.backgroundColor='#FFA000';" onmouseout="this.style.backgroundColor='#A03300';return false;">Reference</div></a></td><td><a href="books.html" target="_top"><div onmouseover="this.style.backgroundColor='#FFA000';" onmouseout="this.style.backgroundColor='#A03300';return false;">Book&nbsp;Reviews</div></a></td></tr></table></div>
+<DIV id=bodytext>
+<script type="text/javascript">movecontent();</script>
+<div class=topad><A HREF="//www.regexbuddy.com/java.html" TARGET="_top"><img src="ads/728/rxbjava100.png" srcset="ads/728/rxbjava100.png 1x, ads/728/rxbjava125.png 1.25x, ads/728/rxbjava150.png 1.5x, ads/728/rxbjava175.png 1.75x, ads/728/rxbjava200.png 2x, ads/728/rxbjava250.png 2.5x, ads/728/rxbjava300.png 3x, ads/728/rxbjava350.png 3.5x, ads/728/rxbjava400.png 4x" alt="RegexBuddy—The best regex editor and tester for Java developers!"></A></div>
+<H1>Using Regular Expressions in Java</h1>
+
+<P>Java 4 (JDK 1.4) and later have comprehensive support for regular expressions through the standard <TT CLASS=code>java.util.regex</TT> package.  Because Java lacked a regex package for so long, there are also many 3rd party regex packages available for Java.  I will only discuss Sun's regex library that is now part of the JDK.  Its quality is excellent, better than most of the 3rd party packages.  Unless you need to support older versions of the JDK, the <TT CLASS=code>java.util.regex</TT> package is the way to go.</P>
+
+<P>Java 5 fixes some bugs and adds support for <a href="unicode.html#block">Unicode blocks</a>.  Java 6 fixes a few more bugs but doesn't add any features.  Java 7 adds <A HREF="named.html" TARGET="_top">named capture</A> and <a href="unicode.html#script">Unicode scripts</a>.</p>
+
+<div class=adsense>
+<script type="text/javascript"><!--
+google_ad_client = "pub-7485249680256358";
+google_ad_width = 728;
+google_ad_height = 90;
+google_ad_format = "728x90_as";
+google_ad_type = "text_image";
+google_ad_channel = "";
+google_color_border = "FF6600";
+google_color_bg = "FFF4E8";
+google_color_link = "EE5500";
+google_color_text = "000000";
+google_color_url = "803300";
+google_ui_features = "rc:0";
+//-->
+</script>
+<script type="text/javascript"
+  src="//pagead2.googlesyndication.com/pagead/show_ads.js">
+</script>
+</div><H2>Quick Regex Methods of The String Class</H2>
+
+<P>The Java String class has several methods that allow you to perform an operation using a regular expression on that string in a minimal amount of code.  The downside is that you cannot specify options such as "case insensitive" or "dot matches newline".  For performance reasons, you should also not use these methods if you will be using the same regular expression often.</P>
+
+<P><TT CLASS=code>myString.matches("regex")</TT> returns true or false depending whether the string can be matched entirely by the regular expression.  It is important to remember that String.matches() only returns true if the entire string can be matched.  In other words: "regex" is applied as if you had written "^regex$" with <A HREF="anchors.html" TARGET="_top">start and end of string</A> anchors.  This is different from most other regex libraries, where the "quick match test" method returns true if the regex can be matched anywhere in the string.  If myString is <TT CLASS=string>abc</TT> then <TT CLASS=code>myString.matches("bc")</TT> returns false.  <TT CLASS=code><SPAN CLASS="regexplain">bc</SPAN></TT> matches <TT CLASS=string>abc</TT>, but <TT CLASS=code><SPAN CLASS="regexspecial">^</SPAN><SPAN CLASS="regexplain">bc</SPAN><SPAN CLASS="regexspecial">$</SPAN></TT> (which is really being used here) does not.</P>
+
+<P><TT CLASS=code>myString.replaceAll("regex", "replacement")</TT> replaces all regex matches inside the string with the replacement string you specified.  No surprises here.  All parts of the string that match the regex are replaced.  You can use the contents of <A HREF="brackets.html" TARGET="_top">capturing parentheses</A> in the replacement text via $1, $2, $3, etc.  $0 (dollar zero) inserts the entire regex match.  $12 is replaced with the 12th backreference if it exists, or with the 1st backreference followed by the literal "2" if there are less than 12 backreferences.  If there are 12 or more backreferences, it is not possible to insert the first backreference immediately followed by the literal "2" in the replacement text.</P>
+
+<P>In the replacement text, a dollar sign not followed by a digit causes an IllegalArgumentException to be thrown.  If there are less than 9 backreferences, a dollar sign followed by a digit greater than the number of backreferences throws an IndexOutOfBoundsException.  So be careful if the replacement string is a user-specified string.  To insert a dollar sign as literal text, use <TT>\$</TT> in the replacement text.  When coding the replacement text as a literal string in your source code, remember that the backslash itself must be escaped too: <TT>"\\$"</TT>.</P>
+
+<P><TT CLASS=code>myString.split("regex")</TT> splits the string at each regex match.  The method returns an array of strings where each element is a part of the original string between two regex matches.  The matches themselves are not included in the array.  Use <TT CLASS=code>myString.split("regex", n)</TT> to get an array containing at most n items.  The result is that the string is split at most n-1 times.  The last item in the string is the unsplit remainder of the original string.</P>
+
+<div class=adsense>
+<script type="text/javascript"><!--
+google_ad_client = "pub-7485249680256358";
+google_ad_width = 728;
+google_ad_height = 90;
+google_ad_format = "728x90_as";
+google_ad_type = "text_image";
+google_ad_channel = "";
+google_color_border = "FF6600";
+google_color_bg = "FFF4E8";
+google_color_link = "EE5500";
+google_color_text = "000000";
+google_color_url = "803300";
+google_ui_features = "rc:0";
+//-->
+</script>
+<script type="text/javascript"
+  src="//pagead2.googlesyndication.com/pagead/show_ads.js">
+</script>
+</div><H2>Using The Pattern Class</H2>
+
+<P>In Java, you compile a regular expression by using the <TT CLASS=code>Pattern.compile()</TT> class factory.  This factory returns an object of type <TT CLASS=code>Pattern</TT>. E.g.: <TT CLASS=code>Pattern myPattern = Pattern.compile("regex");</TT>  You can specify certain options as an optional second parameter.  <TT CLASS=code>Pattern.compile("regex", Pattern.CASE_INSENSITIVE | Pattern.DOTALL | Pattern.MULTILINE)</TT> makes the regex case insensitive for US ASCII characters, causes the <A HREF="dot.html" TARGET="_top">dot</A> to match line breaks and causes the <A HREF="anchors.html" TARGET="_top">start and end of string anchors</A> to match at embedded line breaks as well.  When working with Unicode strings, specify <TT CLASS=code>Pattern.UNICODE_CASE</TT> if you want to make the regex case insensitive for all characters in all languages.  You should always specify <TT CLASS=code>Pattern.CANON_EQ</TT> to ignore differences in Unicode encodings, unless you are sure your strings contain only US ASCII characters and you want to increase performance.</P>
+
+<P>If you will be using the same regular expression often in your source code, you should create a <TT CLASS=code>Pattern</TT> object to increase performance.  Creating a <TT CLASS=code>Pattern</TT> object also allows you to pass matching options as a second parameter to the <TT CLASS=code>Pattern.compile()</TT> class factory.  If you use one of the <TT CLASS=code>String</TT> methods above, the only way to specify options is to embed mode modifier into the regex.  Putting <TT CLASS=code><SPAN CLASS="regexmeta">(?</SPAN><SPAN CLASS="regexmeta">i</SPAN><SPAN CLASS="regexmeta">)</SPAN></TT> at the start of the regex makes it case insensitive.  <TT CLASS=code><SPAN CLASS="regexmeta">(?</SPAN><SPAN CLASS="regexmeta">m</SPAN><SPAN CLASS="regexmeta">)</SPAN></TT> is the equivalent of <TT CLASS=code>Pattern.MULTILINE</TT>, <TT CLASS=code><SPAN CLASS="regexmeta">(?</SPAN><SPAN CLASS="regexmeta">s</SPAN><SPAN CLASS="regexmeta">)</SPAN></TT> equals <TT CLASS=code>Pattern.DOTALL</TT> and <TT CLASS=code><SPAN CLASS="regexmeta">(?</SPAN><SPAN CLASS="regexerr">u</SPAN><SPAN CLASS="regexmeta">)</SPAN></TT> is the same as <TT CLASS=code>Pattern.UNICODE_CASE</TT>.  Unfortunately, <TT CLASS=code>Pattern.CANON_EQ</TT> does not have an embedded mode modifier equivalent.</P>
+
+<P>Use <TT CLASS=code>myPattern.split("subject")</TT> to split the subject string using the compiled regular expression.  This call has exactly the same results as <TT CLASS=code>myString.split("regex")</TT>.  The difference is that the former is faster since the regex was already compiled.</P>
+
+<H2>Using The Matcher Class</H2>
+
+<P>Except for splitting a string (see previous paragraph), you need to create a <TT CLASS=code>Matcher</TT> object from the <TT CLASS=code>Pattern</TT> object.  The <TT CLASS=code>Matcher</TT> will do the actual work.  The advantage of having two separate classes is that you can create many <TT CLASS=code>Matcher</TT> objects from a single <TT CLASS=code>Pattern</TT> object, and thus apply the regular expression to many subject strings simultaneously.</P>
+
+<P>To create a <TT CLASS=code>Matcher</TT> object, simply call <TT CLASS=code>Pattern.matcher()</TT> like this: <TT CLASS=code>myMatcher = Pattern.matcher("subject")</TT>.  If you already created a <TT CLASS=code>Matcher</TT> object from the same pattern, call <TT CLASS=code>myMatcher.reset("newsubject")</TT> instead of creating a new matcher object, for reduced garbage and increased performance.  Either way, <TT CLASS=code>myMatcher</TT> is now ready for duty.</P>
+
+<P>To find the first match of the regex in the subject string, call <TT CLASS=code>myMatcher.find()</TT>.  To find the next match, call <TT CLASS=code>myMatcher.find()</TT> again.  When <TT CLASS=code>myMatcher.find()</TT> returns false, indicating there are no further matches, the next call to <TT CLASS=code>myMatcher.find()</TT> will find the first match again.  The <TT CLASS=code>Matcher</TT> is automatically reset to the start of the string when <TT CLASS=code>find()</TT> fails.</P>
+
+<P>The <TT CLASS=code>Matcher</TT> object holds the results of the last match.  Call its methods <TT CLASS=code>start()</TT>, <TT CLASS=code>end()</TT> and <TT CLASS=code>group()</TT> to get details about the entire regex match and the matches between <A HREF="brackets.html" TARGET="_top">capturing parentheses</A>.  Each of these methods accepts a single int parameter indicating the number of the <A HREF="backref.html" TARGET="_top">backreference</A>.  Omit the parameter to get information about the entire regex match.  <TT CLASS=code>start()</TT> is the index of the first character in the match. <TT CLASS=code>end()</TT> is the index of the first character after the match.  Both are relative to the start of the subject string.  So the length of the match is <NOBR><TT CLASS=code>end() - start()</TT></NOBR>.  <TT CLASS=code>group()</TT> returns the string matched by the regular expression or pair of capturing parentheses.</P>
+
+<P><TT CLASS=code>myMatcher.replaceAll("replacement")</TT> has exactly the same results as <TT CLASS=code>myString.replaceAll("regex", "replacement")</TT>.  Again, the difference is speed.</P>
+
+<P>The <TT CLASS=code>Matcher</TT> class allows you to do a search-and-replace and compute the replacement text for each regex match in your own code.  You can do this with the <TT CLASS=code>appendReplacement()</TT> and <TT CLASS=code>appendTail()</TT> Here is how:</P>
+
+<PRE>StringBuffer myStringBuffer = <SPAN CLASS="reservedword">new</SPAN> StringBuffer();
+myMatcher = myPattern.matcher(<SPAN CLASS="characterstring">"subject"</SPAN>);
+<SPAN CLASS="reservedword">while</SPAN> (myMatcher.find()) <SPAN CLASS="bracket">{</SPAN>
+  <SPAN CLASS="reservedword">if</SPAN> (checkIfThisMatchShouldBeReplaced()) <SPAN CLASS="bracket">{</SPAN>
+    myMatcher.appendReplacement(myStringBuffer, computeReplacementString());
+  <SPAN CLASS="bracket">}</SPAN>
+<SPAN CLASS="bracket">}</SPAN>
+myMatcher.appendTail(myStringBuffer);</PRE>
+
+<P>Obviously, <TT CLASS=code>checkIfThisMatchShouldBeReplaced()</TT> and <TT CLASS=code>computeReplacementString()</TT> are placeholders for methods that you supply.  The first returns true or false indicating if a replacement should be made at all.  Note that skipping replacements is way faster than replacing a match with exactly the same text as was matched.  <TT CLASS=code>computeReplacementString()</TT> returns the actual replacement string.</P>
+
+<H2>Regular Expressions, Literal Strings and Backslashes</H2>
+
+<P>In literal Java strings the backslash is an escape character.  The literal string <TT CLASS=code>"\\"</TT> is a single backslash.  In regular expressions, the backslash is also an escape character.  The regular expression <TT CLASS=code><SPAN CLASS="regexescaped">\\</SPAN></TT> matches a single backslash.  This regular expression as a Java string, becomes <TT CLASS=code>"\\\\"</TT>.  That's right: 4 backslashes to match a single one.</P>
+
+<P>The regex <TT CLASS=code><SPAN CLASS="regexspecial">\w</SPAN></TT> matches a word character.  As a Java string, this is written as <TT CLASS=code>"\\w"</TT>.</P>
+
+<P>The same backslash-mess occurs when providing replacement strings for methods like String.replaceAll() as literal Java strings in your Java code.  In the replacement text, a dollar sign must be encoded as \$ and a backslash as \\ when you want to replace the regex match with an actual dollar sign or backslash.  However, backslashes must also be escaped in literal Java strings.  So a single dollar sign in the replacement text becomes <TT CLASS=code>"\\$"</TT> when written as a literal Java string.  The single backslash becomes <TT CLASS=code>"\\\\"</TT>.  Right again: 4 backslashes to insert a single one.</P>
+
+
+
+
+<H2>Further Reading</H2>
+
+<P><A HREF="javabook.html" TARGET="_top"><IMG SRC="books/javabooksmall.jpg" WIDTH=106 HEIGHT=140 ALT="Java Regular Expressions - Taming the java.util.regex Engine" BORDER=0 ALIGN=right CLASS=right></A>If you'd like a more detailed overview of all the functionality offered by the java.util.regex package, you may want to get yourself a copy of "Java Regular Expressions" written by Mehran Habibi and published by Apress.  While the <A HREF="tutorial.html" TARGET="_top">regular expressions tutorial</A> on this website is more complete and more detailed, Mr. Habibi's book contains a more slow-paced regular expressions tutorial.  The book definitely provides more information and examples on the java.util.regex package than this single web page can provide.</P>
+
+<P><A HREF="javabook.html" TARGET="_top">My review of the book Java Regular Expressions</A></P>
+
+<ul>
+<li><A HREF="//www.amazon.com/exec/obidos/ASIN/1590591070/jgsbookselection">Buy Java Regular Expressions from Amazon.com</A></li>
+<li><A HREF="//www.amazon.co.uk/exec/obidos/ASIN/1590591070/jgsbookselect">Buy Java Regular Expressions from Amazon.co.uk</A></li>
+<li><A HREF="//www.amazon.fr/exec/obidos/ASIN/1590591070/regularexpres-21">Buy Java Regular Expressions from Amazon.fr</A></li>
+<li><A HREF="//www.amazon.de/exec/obidos/ASIN/1590591070/regularexpr0a-21">Buy Java Regular Expressions from Amazon.de</A></li>
+</ul>
+
+<script type="text/javascript">
+amzn_assoc_placement = "adunit0";
+amzn_assoc_search_bar = "false";
+amzn_assoc_tracking_id = "jgsbookselection";
+amzn_assoc_ad_mode = "search";
+amzn_assoc_ad_type = "smart";
+amzn_assoc_marketplace = "amazon";
+amzn_assoc_region = "US";
+amzn_assoc_title = "";
+amzn_assoc_default_search_phrase = "Java";
+amzn_assoc_default_category = "Books";
+amzn_assoc_linkid = "356e0933a7c8586330d5e923e6d874ed";
+</script>
+<script src="//z-na.amazon-adsystem.com/widgets/onejs?MarketPlace=US"></script>
+
+ <h2>Make a Donation</h2> <p>Did this website just save you a trip to the bookstore? Please <a href="https://www.regular-expressions.info/donate.html">make a donation</a> to support this site, and you'll get a <b>lifetime of advertisement-free access</b> to this site! Credit cards, PayPal, and Bitcoin gladly accepted.</p>  <DIV id=copyright> <P CLASS=copyright>Page URL: <A HREF="https://www.regular-expressions.info/java.html" TARGET="_top">https://www.regular-expressions.info/java.html</A><BR> Page last updated: 21 September 2017<BR> Site last updated: 22 September 2017<BR> Copyright &copy; 2003-2017 Jan Goyvaerts. All rights reserved.</P> </DIV> </DIV> <DIV id=side><script type="text/javascript">movecontent();</script> <a href="donate.html" class="img"><img src="img/donate.png" width=240 height=40 class="side"></a>  <TABLE CLASS=side CELLSPACING=0 CELLPADDING=4><TR><TD CLASS=sideheader>Regex Tools</TD></TR><TR><TD><A HREF="grep.html" TARGET=_top>grep</A></TD></TR><TR><TD><A HREF="powergrep.html" TARGET=_top>PowerGREP</A></TD></TR><TR><TD><A HREF="regexbuddy.html" TARGET=_top>RegexBuddy</A></TD></TR><TR><TD><A HREF="regexmagic.html" TARGET=_top>RegexMagic</A></TD></TR>
+</TABLE><TABLE CLASS=side CELLSPACING=0 CELLPADDING=4><TR><TD CLASS=sideheader>General Applications</TD></TR><TR><TD><A HREF="editpadlite.html" TARGET=_top>EditPad&nbsp;Lite</A></TD></TR><TR><TD><A HREF="editpadpro.html" TARGET=_top>EditPad&nbsp;Pro</A></TD></TR>
+</TABLE><TABLE CLASS=side CELLSPACING=0 CELLPADDING=4><TR><TD CLASS=sideheader>Languages &amp; Libraries</TD></TR><TR><TD><A HREF="boost.html" TARGET=_top>Boost</A></TD></TR><TR><TD><A HREF="delphi.html" TARGET=_top>Delphi</A></TD></TR><TR><TD><A HREF="gnu.html" TARGET=_top>GNU&nbsp;(Linux)</A></TD></TR><TR><TD><A HREF="groovy.html" TARGET=_top>Groovy</A></TD></TR><TR><TD><A HREF="java.html" TARGET=_top>Java</A></TD></TR><TR><TD><A HREF="javascript.html" TARGET=_top>JavaScript</A></TD></TR><TR><TD><A HREF="dotnet.html" TARGET=_top>.NET</A></TD></TR><TR><TD><A HREF="pcre.html" TARGET=_top>PCRE&nbsp;(C/C++)</A></TD></TR><TR><TD><A HREF="pcre2.html" TARGET=_top>PCRE2&nbsp;(C/C++)</A></TD></TR><TR><TD><A HREF="perl.html" TARGET=_top>Perl</A></TD></TR><TR><TD><A HREF="php.html" TARGET=_top>PHP</A></TD></TR><TR><TD><A HREF="posix.html" TARGET=_top>POSIX</A></TD></TR><TR><TD><A HREF="powershell.html" TARGET=_top>PowerShell</A></TD></TR><TR><TD><A HREF="python.html" TARGET=_top>Python</A></TD></TR><TR><TD><A HREF="rlanguage.html" TARGET=_top>R</A></TD></TR><TR><TD><A HREF="ruby.html" TARGET=_top>Ruby</A></TD></TR><TR><TD><A HREF="stdregex.html" TARGET=_top>std::regex</A></TD></TR><TR><TD><A HREF="tcl.html" TARGET=_top>Tcl</A></TD></TR><TR><TD><A HREF="vbscript.html" TARGET=_top>VBScript</A></TD></TR><TR><TD><A HREF="vb.html" TARGET=_top>Visual&nbsp;Basic&nbsp;6</A></TD></TR><TR><TD><A HREF="wxwidgets.html" TARGET=_top>wxWidgets</A></TD></TR><TR><TD><A HREF="xml.html" TARGET=_top>XML&nbsp;Schema</A></TD></TR><TR><TD><A HREF="realbasic.html" TARGET=_top>Xojo</A></TD></TR><TR><TD><A HREF="xpath.html" TARGET=_top>XQuery&nbsp;&amp;&nbsp;XPath</A></TD></TR><TR><TD><A HREF="xregexp.html" TARGET=_top>XRegExp</A></TD></TR>
+</TABLE><TABLE CLASS=side CELLSPACING=0 CELLPADDING=4><TR><TD CLASS=sideheader>Databases</TD></TR><TR><TD><A HREF="mysql.html" TARGET=_top>MySQL</A></TD></TR><TR><TD><A HREF="oracle.html" TARGET=_top>Oracle</A></TD></TR><TR><TD><A HREF="postgresql.html" TARGET=_top>PostgreSQL</A></TD></TR>
+</TABLE><TABLE CLASS=side CELLSPACING=0 CELLPADDING=4><TR><TD CLASS=sideheader>More on This Site</TD></TR><TR><TD><A HREF="index.html" TARGET=_top>Introduction</A></TD></TR><TR><TD><A HREF="quickstart.html" TARGET=_top>Regular&nbsp;Expressions&nbsp;Quick&nbsp;Start</A></TD></TR><TR><TD><A HREF="tutorial.html" TARGET=_top>Regular&nbsp;Expressions&nbsp;Tutorial</A></TD></TR><TR><TD><A HREF="replacetutorial.html" TARGET=_top>Replacement&nbsp;Strings&nbsp;Tutorial</A></TD></TR><TR><TD><A HREF="tools.html" TARGET=_top>Applications&nbsp;and&nbsp;Languages</A></TD></TR><TR><TD><A HREF="examples.html" TARGET=_top>Regular&nbsp;Expressions&nbsp;Examples</A></TD></TR><TR><TD><A HREF="reference.html" TARGET=_top>Regular&nbsp;Expressions&nbsp;Reference</A></TD></TR><TR><TD><A HREF="refreplace.html" TARGET=_top>Replacement&nbsp;Strings&nbsp;Reference</A></TD></TR><TR><TD><A HREF="books.html" TARGET=_top>Book&nbsp;Reviews</A></TD></TR><TR><TD><A HREF="print.html" TARGET=_top>Printable&nbsp;PDF</A></TD></TR><TR><TD><A HREF="about.html" TARGET=_top>About&nbsp;This&nbsp;Site</A></TD></TR><TR><TD><A HREF="updates.html" TARGET=_top>RSS&nbsp;Feed&nbsp;&amp;&nbsp;Blog</A></TD></TR></TABLE><div class=adsense>
+<script type="text/javascript"><!--
+google_ad_client = "pub-7485249680256358";
+google_ad_width = 160;
+google_ad_height = 600;
+google_ad_format = "160x600_as";
+google_ad_type = "text_image";
+google_ad_channel = "";
+google_color_border = "FF6600";
+google_color_bg = "FFF4E8";
+google_color_link = "EE5500";
+google_color_text = "000000";
+google_color_url = "803300";
+google_ui_features = "rc:0";
+//-->
+</script>
+<script type="text/javascript"
+  src="//pagead2.googlesyndication.com/pagead/show_ads.js">
+</script>
+</div><div><a href="//www.powergrep.com/"><img class=side src="ads/pgr100.png" srcset="ads/pgr100.png 1x, ads/pgr125.png 1.25x, ads/pgr150.png 1.5x, ads/pgr175.png 1.75x, ads/pgr200.png 2x, ads/pgr250.png 2.5x, ads/pgr300.png 3x" alt="PowerGREP—The world’s most powerful tool to flex your regex muscles!"></a></div></DIV><script type="text/javascript">movecontent();</script></BODY></HTML>
